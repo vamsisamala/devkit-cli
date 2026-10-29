@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [feature/devkit-test]
 
 permissions:
   contents: read
@@ -20,20 +18,40 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v7.0.1
+
       - name: Set up Go
         uses: actions/setup-go@v7.0.0
         with:
           go-version-file: go.mod
           cache: true
+
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v9.3.0
         with:
           version-file: .golangci-lint-version
           install-only: true
-      - name: Run project checks
-        run: make check
+
+      - name: Check Go formatting
+        run: make fmt
+
+      - name: Lint Go sources
+        run: make lint
+
+      - name: Run Go tests
+        run: make test
+
+      - name: Run Go tests with race detector
+        run: make test-race
+
+      - name: Run go vet
+        run: make vet
+
+      - name: Verify module checksums
+        run: make mod-verify
+
       - name: Build CLI
         run: make build
+
       - name: Validate GoReleaser configuration
         uses: goreleaser/goreleaser-action@v7.2.3
         with:
